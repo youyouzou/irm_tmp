@@ -1,0 +1,30 @@
+﻿dataset_name: mmfi_wifi7
+dataset_root: wifi_data/mmfi
+input_adapter: mmfi_tcsx
+auto_infer_num_classes: true
+auto_infer_envs: true
+nonfinite_policy: linear_interp
+
+backbone_type: sparse
+penalty_type: none
+method_name: erm_sparse
+
+epochs: 80
+batch_size: 12
+optimizer: adam
+lr: 0.001
+weight_decay: 0.001
+lr_scheduler: cosine
+warmup_epochs: 5
+
+penalty_weight: 0.0
+penalty_anneal_epochs: 0
+prune_rate: 0.6
+dropout: 0.4
+
+stem_channels: 32
+stage_channels: [64, 128, 128]
+stage_pool_kernels: [[2, 1], [2, 2], [2, 2]]
+amp_enabled: true
+grad_clip_norm: 1.0
+

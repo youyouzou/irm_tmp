@@ -1,0 +1,31 @@
+﻿dataset_name: mmfi_wifi7
+dataset_root: wifi_data/mmfi
+model_family: mmfi_resnet
+input_adapter: mmfi_tcsx
+normalization_mode: train_global_scalar
+auto_infer_num_classes: true
+auto_infer_envs: true
+nonfinite_policy: linear_interp
+
+backbone_type: dense
+penalty_type: irm
+method_name: irm_dense
+
+epochs: 100
+batch_size: 4
+optimizer: adam
+lr: 0.001
+weight_decay: 0.001
+lr_scheduler: cosine
+warmup_epochs: 5
+
+penalty_weight: 0.05
+penalty_anneal_epochs: 10
+prune_rate: 0.0
+dropout: 0.2
+
+stem_channels: 32
+stage_channels: [64, 128, 128]
+stage_pool_kernels: [[2, 1], [2, 2], [2, 2]]
+amp_enabled: true
+grad_clip_norm: 1.0

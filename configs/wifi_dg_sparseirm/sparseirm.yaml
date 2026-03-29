@@ -1,0 +1,30 @@
+﻿dataset_name: wifi5300_har
+dataset_root: wifi_data/5300
+input_adapter: two_d_single_channel
+auto_infer_num_classes: true
+auto_infer_envs: true
+nonfinite_policy: none
+
+backbone_type: sparse
+penalty_type: irm
+method_name: sparseirm
+
+epochs: 60
+batch_size: 64
+optimizer: adam
+lr: 0.001
+weight_decay: 0.0005
+lr_scheduler: cosine
+warmup_epochs: 5
+
+penalty_weight: 1.0
+penalty_anneal_epochs: 5
+prune_rate: 0.7
+dropout: 0.3
+
+stem_channels: 32
+stage_channels: [64, 128, 128]
+stage_pool_kernels: [[2, 1], [2, 2], [2, 2]]
+amp_enabled: true
+grad_clip_norm: 1.0
+

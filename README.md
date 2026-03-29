@@ -1,48 +1,106 @@
-# SparseIRM
+﻿# WiFi DG SparseIRM
 
-## Requirements:
+用于 WiFi CSI 领域泛化（DG）的训练框架，支持以下方法：
 
-```
-Pytorch 1.7
-Python 3.7.7
-CUDA Version 10.1
-pyyaml 5.3.1
-tensorboard 2.2.1
-torchvision 0.5.0
-tqdm 4.50.2
-```
+- ERM
+- IRM
+- REx
+- SparseIRM
+- SparseREx
 
-## Command
-Below are the commands for replicating the results of ColoredMNIST and FullColoredMNIST experiments.
+当前数据集：
+
+- `wifi_data/5300`
+- `wifi_data/mmfi`
+
+## 数据与 Baseline 策略
+
+- 5300：使用默认 `wifi_csi_default` backbone。
+- MMFI：`ERM/IRM/REx` 使用 `mmfi_resnet` 专用 backbone（与 5300 分离）。
+- MMFI 输入重排：`(297, 3, 114, 10) -> (30, 297, 114)`。
+- MMFI 非有限值处理：`linear_interp`（时间维线性插值 + 边界延拓 + 全无效序列置零）。
+
+## 选模与 Early Stopping
+
+`new_best` 与 best checkpoint 的判定规则：
+
+1. `val_acc`（越高越好）
+2. `worst_source_env_acc`（越高越好）
+3. `val_loss`（越低越好）
+
+Early stopping 默认启用：
+
+- `early_stopping_enabled: true`
+- `early_stopping_patience: 15`
+- `early_stopping_min_epochs: 10`
+
+## 训练命令
+
+MMFI ERM：
 
 ```bash
-python main.py --config configs/smallscale/resnet18/resnet18-usc-unsigned.yaml --multigpu 1 --data dataset/ --epochs 1500 --K 1 --conv-type ProbMaskConvLinear --weight-decay 0 --lr-policy cosine_lr --optimizer adam --lr 6e-3 --score-init-constant 1 --prune-rate 0.95 --batch-size 50000 --arch MLP --set mnist --iterative --TA --l2_regularizer_weight 0.001 --weight_opt adam --weight_opt_lr 0.0006 --hidden_dim 390 --penalty_anneal_iters 200 --penalty_weight 10000 --envs_num 2 --irm_type rex --data_num 50000 --seed 0  --ts 0.28 --train_weights_at_the_same_time 
-
-python main.py --config configs/smallscale/resnet18/resnet18-usc-unsigned.yaml --multigpu 1 --data dataset/ --epochs 1500 --K 1 --conv-type ProbMaskConvLinear --weight-decay 0 --lr-policy cosine_lr --optimizer adam --lr 6e-3 --score-init-constant 1 --prune-rate 0.95 --batch-size 50000 --arch MLP --set mnist --iterative --TA --l2_regularizer_weight 0.001 --weight_opt adam --weight_opt_lr 0.0006 --hidden_dim 390 --penalty_anneal_iters 200 --penalty_weight 10000 --envs_num 2 --irm_type rex --data_num 50000 --seed 0  --ts 0.28 --train_weights_at_the_same_time 
-
-python main.py --config configs/smallscale/resnet18/resnet18-usc-unsigned.yaml --multigpu 1 --data dataset/ --epochs 1500 --K 1 --conv-type ProbMaskConvLinear --weight-decay 0 --lr-policy cosine_lr --optimizer adam --lr 6e-3 --score-init-constant 1 --prune-rate 0.95 --batch-size 390 --arch MLPFull --set mnistfull --iterative --TA --l2_regularizer_weight 0.001 --weight_opt adam --weight_opt_lr 0.0006 --hidden_dim 390 --penalty_anneal_iters 400 --penalty_weight 10000 --envs_num 2 --irm_type irmv1 --data_num 50000 --seed 0  --ts 0.28 --train_weights_at_the_same_time --ours  --cons_ratio 0.9_0.7_0.1 --noise_ratio 0.2
-
-python main.py --config configs/smallscale/resnet18/resnet18-usc-unsigned.yaml --multigpu 1 --data dataset/ --epochs 1500 --K 1 --conv-type ProbMaskConvLinear --weight-decay 0 --lr-policy cosine_lr --optimizer adam --lr 6e-3 --score-init-constant 1 --prune-rate 0.95 --batch-size 390 --arch MLPFull --set mnistfull --iterative --TA --l2_regularizer_weight 0.001 --weight_opt adam --weight_opt_lr 0.0006 --hidden_dim 390 --penalty_anneal_iters 400 --penalty_weight 10000 --envs_num 2 --irm_type rex --data_num 50000 --seed 0  --ts 0.28 --train_weights_at_the_same_time --ours  --cons_ratio 0.9_0.7_0.1 --noise_ratio 0.2
+python train_wifi_erm.py --config configs/wifi_dg_sparseirm/mmfi_erm_dense.yaml --seed 0
 ```
 
-## Cite
-If you find this implementation is helpful to your work, please cite 
-```BibTeX
+`mmfi_erm_dense.yaml` 已内置稳健参数（`epochs=200, batch_size=12, lr=3e-4, weight_decay=1e-4, dropout=0.1, early_stopping_min_epochs=60, early_stopping_patience=40`）。
 
-@InProceedings{pmlr-v162-zhou22e,
-  title = 	 {Sparse Invariant Risk Minimization},
-  author =       {Zhou, Xiao and Lin, Yong and Zhang, Weizhong and Zhang, Tong},
-  booktitle = 	 {Proceedings of the 39th International Conference on Machine Learning},
-  pages = 	 {27222--27244},
-  year = 	 {2022},
-  editor = 	 {Chaudhuri, Kamalika and Jegelka, Stefanie and Song, Le and Szepesvari, Csaba and Niu, Gang and Sabato, Sivan},
-  volume = 	 {162},
-  series = 	 {Proceedings of Machine Learning Research},
-  month = 	 {17--23 Jul},
-  publisher =    {PMLR},
-  pdf = 	 {https://proceedings.mlr.press/v162/zhou22e/zhou22e.pdf},
-  url = 	 {https://proceedings.mlr.press/v162/zhou22e.html},
-  abstract = 	 {Invariant Risk Minimization (IRM) is an emerging invariant feature extracting technique to help generalization with distributional shift. However, we find that there exists a basic and intractable contradiction between the model trainability and generalization ability in IRM. On one hand, recent studies on deep learning theory indicate the importance of large-sized or even overparameterized neural networks to make the model easy to train. On the other hand, unlike empirical risk minimization that can be benefited from overparameterization, our empirical and theoretical analyses show that the generalization ability of IRM is much easier to be demolished by overfitting caused by overparameterization. In this paper, we propose a simple yet effective paradigm named Sparse Invariant Risk Minimization (SparseIRM) to address this contradiction. Our key idea is to employ a global sparsity constraint as a defense to prevent spurious features from leaking in during the whole IRM process. Compared with sparisfy-after-training prototype by prior work which can discard invariant features, the global sparsity constraint limits the budget for feature selection and enforces SparseIRM to select the invariant features. We illustrate the benefit of SparseIRM through a theoretical analysis on a simple linear case. Empirically we demonstrate the power of SparseIRM through various datasets and models and surpass state-of-the-art methods with a gap up to 29%.}
-}
+MMFI IRM / REx：
 
+```bash
+python train_wifi_sparseirm.py --config configs/wifi_dg_sparseirm/mmfi_irm_dense.yaml --seed 0
+python train_wifi_sparseirm.py --config configs/wifi_dg_sparseirm/mmfi_rex_dense.yaml --seed 0
 ```
+
+5300 ERM：
+
+```bash
+python train_wifi_erm.py --config configs/wifi_dg_sparseirm/erm_dense.yaml --seed 0
+```
+
+## 输出目录（固定分层）
+
+每次训练统一输出到：
+
+```text
+outputs/{dataset_name}/{method_name}/seed{n}/
+```
+
+目录结构：
+
+```text
+seed{n}/
+  config.yaml
+  checkpoints/
+    checkpoint_best.pth
+  logs/
+    train_log.csv
+  plots/
+    curves_acc.png
+    curves_loss.png
+    confusion_matrix_test_normalized.png
+  metrics/
+    run_metrics.json
+```
+
+其中 `metrics/run_metrics.json` 为唯一统计汇总文件，包含：
+
+- `dataset_info`
+- `best_val_record`
+- `val_best_metrics`
+- `test_metrics`
+- `final_summary`
+- `sparsity`（仅稀疏方法存在）
+
+## Benchmark
+
+按方法批量运行并汇总：
+
+```bash
+python run_wifi_dg_sparseirm_benchmark.py --config-dir configs/wifi_dg_sparseirm --methods erm_dense irm_dense rex_dense --seeds 0 1 2
+```
+
+方法级与数据集级汇总分别输出在：
+
+- `outputs/{dataset_name}/{method_name}/summary.json`
+- `outputs/{dataset_name}/{method_name}/summary.csv`
+- `outputs/{dataset_name}/benchmark_summary.csv`
